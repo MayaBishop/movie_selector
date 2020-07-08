@@ -2,5 +2,5 @@
 /shelf/
 /workspace.xml
 /__pycache__/
-/person_ids_07_06_2020.json
+/person_ids_*.json
 /.idea/

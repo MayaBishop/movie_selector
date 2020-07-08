@@ -1,9 +1,11 @@
 import requests
 import json
 import get_people_json
+import random
 
 
 types = {"g":"Genre", "a":"Actor/Actress", "y":"Year"}
+previous_movies = {}
 
 def getType(string):
     string = string.replace(" ","")
@@ -34,7 +36,19 @@ def getGenres():
         genres[listOfGenres[i]['name'].lower()] = listOfGenres[i]['id']
     return genres
 
+def getMovie(movies):
+    global previous_movies
+    num = random.randint(0, len(movies)-1)
+    while num in previous_movies and len(previous_movies) < len(movies):
+        num = random.randint(0, len(movies)-1)
+    if len(previous_movies) >= len(movies):
+        return "No movies left"
+    previous_movies[num] = movies[num]['title']
+    return movies[num]
+
+
 def main():
+    global previous_movies
     discover = 'discover/movie'
     genres_add_on_root = '&with_genres='
     years_add_on_root = '&primary_release_year='
@@ -66,13 +80,22 @@ def main():
                 else:
                     print("Actor/Actress not available")
         #THING TO ADD CIRCLE THROUGH MOVIES ARE RANDOM
-        movies = callAPI(discover, add_ons)['results']
-        if len(movies) > 0:
-            print(movies[0]['title'], ":", movies[0]['overview'])
-            #print(movies[0])
-        else:
-            print("Search not available")
+        while True:
+            movies = callAPI(discover, add_ons)['results']
+            if len(movies) > 0:
+                movie = getMovie(movies)
+                if movie == "No movies left":
+                    print(movie)
+                    break
+                print(movie['title'], ":", movie['overview'])
+            else:
+                print("Search not available")
+                break
+            acceptable = input("Would you another movie?(is so type Y) ")
+            if acceptable.lower() != "y":
+                break
         input_value = input("\nWhat way do you want to select a Movie?\n Genre(G), Actor/Actress(A), Year(Y): ")
+        previous_movies = {}
 
 
 
