@@ -20,6 +20,7 @@ def callAPI(call_type, add_ons):
     api_token = '2496fe73d7cabf4f2293e65f4af6b962'
     api_url_base = 'https://api.themoviedb.org/3/'
     api_url = '{}{}?api_key={}&page=1&include_adult=false{}'.format(api_url_base, call_type, api_token,  add_ons)
+    print(api_url)
     response = requests.get(api_url)
     if response.status_code == 200:
         return json.loads(response.content.decode('utf-8'))
@@ -36,18 +37,32 @@ def getGenres():
         genres[listOfGenres[i]['name'].lower()] = listOfGenres[i]['id']
     return genres
 
-def getMovie(movies):
-    global previous_movies
-    num = random.randint(0, len(movies)-1)
-    while num in previous_movies and len(previous_movies) < len(movies):
-        num = random.randint(0, len(movies)-1)
-    if len(previous_movies) >= len(movies):
-        return "No movies left"
-    previous_movies[num] = movies[num]['title']
-    return movies[num]
+def getMovie(discover, add_ons):
+    while True:
+        movies = callAPI(discover, add_ons)['results']
+        if len(movies) > 0:
+            global previous_movies
+            num = random.randint(0, len(movies) - 1)
+            while num in previous_movies and len(previous_movies) < len(movies):
+                num = random.randint(0, len(movies) - 1)
+            if len(previous_movies) >= len(movies):
+                return "No movies left"
+            previous_movies[num] = movies[num]['title']
+            movie = movies[num]
+            if movie == "No movies left":
+                print(movie)
+                break
+            print(movie['title'], ":", movie['overview'])
+        else:
+            print("Search not available")
+            break
+        acceptable = input("Would you another movie?(is so type Y) ")
+        if acceptable.lower() != "y":
+            break
 
 
-def main():
+
+def getAddons(genre, actor, year):
     global previous_movies
     discover = 'discover/movie'
     genres_add_on_root = '&with_genres='
@@ -80,25 +95,8 @@ def main():
                 else:
                     print("Actor/Actress not available")
         #THING TO ADD CIRCLE THROUGH MOVIES ARE RANDOM
-        while True:
-            movies = callAPI(discover, add_ons)['results']
-            if len(movies) > 0:
-                movie = getMovie(movies)
-                if movie == "No movies left":
-                    print(movie)
-                    break
-                print(movie['title'], ":", movie['overview'])
-            else:
-                print("Search not available")
-                break
-            acceptable = input("Would you another movie?(is so type Y) ")
-            if acceptable.lower() != "y":
-                break
+        getMovie(discover, add_ons)
         input_value = input("\nWhat way do you want to select a Movie?\n Genre(G), Actor/Actress(A), Year(Y): ")
         previous_movies = {}
 
 
-
-
-
-main()
