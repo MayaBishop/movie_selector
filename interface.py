@@ -33,11 +33,12 @@ class MainWindow(QWidget):
         # self.qbtn.move(10, 10)
 
         self.movieTitle.setFont(font)
+        self.movieTitle.move(500, 200)
 
         self.genreCheck.setFont(font)
         self.genreCheck.setText("Genre")
 
-        self.genreText.addItems(main.getGenres().keys())
+        self.genreText.addItems(main.get_genres().keys())
 
         self.actorCheck.setFont(font)
         self.actorCheck.setText("Actor/Actress")
@@ -99,12 +100,15 @@ class MainWindow(QWidget):
         self.submit.setEnabled(True)
         self.submit.setVisible(True)
 
+        self.movieTitle.setEnabled(False)
+        self.movieTitle.setEnabled(False)
+
         self.newMovie.setEnabled(False)
         self.newMovie.setVisible(False)
 
         self.show()
 
-    def movie_ui(self):
+    def movie_ui(self, movie):
         self.genreCheck.setEnabled(False)
         self.genreCheck.setVisible(False)
 
@@ -126,11 +130,17 @@ class MainWindow(QWidget):
         self.submit.setEnabled(False)
         self.submit.setVisible(False)
 
+        self.movieTitle.setEnabled(True)
+        self.movieTitle.setEnabled(True)
+
+        #figure out text update
+        self.movieTitle.setText(movie['title'])
+        self.movieTitle.update()
+
         self.newMovie.setEnabled(True)
         self.newMovie.setVisible(True)
 
         self.show()
-
 
     def on_submit(self):
         if self.genreCheck.isTristate():
@@ -148,12 +158,16 @@ class MainWindow(QWidget):
         else:
             year = ""
 
-        movie = main.getAddons(genre, actor, year)
+        discover, add_ons = main.get_addons(genre, actor, year)
+        print(discover, add_ons)
+        movie = main.get_movie(discover, add_ons)
+        print(movie['title'],":",movie['overview'])
         self.movie_ui(movie)
 
     def on_click(self):
         # main.main()
         self.main_ui()
+
 
 def window():
     app = QApplication(sys.argv)
