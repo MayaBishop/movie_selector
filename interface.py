@@ -1,17 +1,27 @@
+import faulthandler;
+
+faulthandler.enable()
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout
 import sys
 import main
+import requests
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
         # self.qbtn = QtWidgets.QPushButton(self)
+        self.discover = ""
+        self.add_ons = ""
+        self.label = QtWidgets.QLabel(self)
         self.grid = QGridLayout()
         self.submit = QtWidgets.QPushButton(self)
         self.newMovie = QtWidgets.QPushButton(self)
-        self.movieTitle = QtWidgets.QTextEdit(self)
+        self.newSearch = QtWidgets.QPushButton(self)
+        self.newMoviePoster = QtGui.QImage()
+        self.movieTitle = QtWidgets.QLabel(self)
+        self.movieDescription = QtWidgets.QLabel(self)
         self.genreCheck = QtWidgets.QCheckBox(self)
         self.actorCheck = QtWidgets.QCheckBox(self)
         self.yearCheck = QtWidgets.QCheckBox(self)
@@ -33,7 +43,12 @@ class MainWindow(QWidget):
         # self.qbtn.move(10, 10)
 
         self.movieTitle.setFont(font)
-        self.movieTitle.move(500, 200)
+        self.movieTitle.setText("Text")
+        self.movieTitle.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.movieDescription.setFont(font)
+        self.movieDescription.setText("Text")
+        self.movieDescription.setWordWrap(True)
 
         self.genreCheck.setFont(font)
         self.genreCheck.setText("Genre")
@@ -55,26 +70,34 @@ class MainWindow(QWidget):
         self.submit.clicked.connect(self.on_submit)
 
         self.newMovie.setText("Amanda says NO")
-        self.newMovie.move(500, 300)
-        self.newMovie.clicked.connect(self.on_click)
+        self.newMovie.clicked.connect(self.on_refusal)
+
+        self.newSearch.setText("Want Something New")
+        self.newSearch.clicked.connect(self.on_new_movie)
 
         self.grid.setSpacing(10)
         self.grid.setRowStretch(0, 1)
-        self.grid.addWidget(self.genreCheck, 1, 0, 1, 3)
-        self.grid.addWidget(self.genreText, 2, 0, 1, 3)
-        self.grid.addWidget(self.actorCheck, 3, 0, 1, 3)
-        self.grid.addWidget(self.actorText, 4, 0, 1, 3)
-        self.grid.addWidget(self.yearCheck, 5, 0, 1, 3)
-        self.grid.addWidget(self.yearText, 6, 0, 1, 3)
+        self.label.setPixmap(QtGui.QPixmap(self.newMoviePoster))
+        self.label.show()
+        self.grid.addWidget(self.genreCheck, 1, 0, 1, 5)
+        self.grid.addWidget(self.movieTitle, 1, 0, 1, 1)
+        self.grid.addWidget(self.movieDescription, 1, 1, 3, 4)
+        self.grid.addWidget(self.label, 2, 0, 1, 1)
+        self.grid.addWidget(self.genreText, 2, 0, 1, 5)
+        self.grid.addWidget(self.actorCheck, 3, 0, 1, 5)
+        self.grid.addWidget(self.actorText, 4, 0, 1, 5)
+        self.grid.addWidget(self.yearCheck, 5, 0, 1, 5)
+        self.grid.addWidget(self.yearText, 6, 0, 1, 5)
         self.grid.setRowStretch(7, 1)
-        self.grid.addWidget(self.submit, 8, 1, 1, 1)
+        self.grid.addWidget(self.submit, 8, 2, 1, 1)
         self.grid.addWidget(self.newMovie, 8, 1, 1, 1)
+        self.grid.addWidget(self.newSearch, 8, 3, 1, 1)
         self.grid.setRowStretch(9, 1)
         print(self.grid.rowCount())
         print(self.grid.columnCount())
         self.setLayout(self.grid)
 
-        self.setGeometry(200, 200, 500, 300)
+        self.setGeometry(200, 200, 700, 400)
         self.main_ui()
         sys.exit(app.exec_())
 
@@ -101,10 +124,18 @@ class MainWindow(QWidget):
         self.submit.setVisible(True)
 
         self.movieTitle.setEnabled(False)
-        self.movieTitle.setEnabled(False)
+        self.movieTitle.setVisible(False)
+
+        self.movieDescription.setEnabled(False)
+        self.movieDescription.setVisible(False)
+
+        self.label.setVisible(False)
 
         self.newMovie.setEnabled(False)
         self.newMovie.setVisible(False)
+
+        self.newSearch.setEnabled(False)
+        self.newSearch.setVisible(False)
 
         self.show()
 
@@ -131,14 +162,28 @@ class MainWindow(QWidget):
         self.submit.setVisible(False)
 
         self.movieTitle.setEnabled(True)
-        self.movieTitle.setEnabled(True)
+        self.movieTitle.setVisible(True)
 
-        #figure out text update
         self.movieTitle.setText(movie['title'])
         self.movieTitle.update()
 
+        self.movieDescription.setEnabled(True)
+        self.movieDescription.setVisible(True)
+
+        self.movieDescription.setText(movie['overview'])
+        self.movieDescription.update()
+
+        self.newMoviePoster.loadFromData(
+            requests.get("https://image.tmdb.org/t/p/original/" + movie['poster_path']).content)
+        self.label.setPixmap(QtGui.QPixmap(self.newMoviePoster.scaled(275, 275, QtCore.Qt.KeepAspectRatio)))
+        self.label.show()
+        self.label.setVisible(True)
+
         self.newMovie.setEnabled(True)
         self.newMovie.setVisible(True)
+
+        self.newSearch.setEnabled(True)
+        self.newSearch.setVisible(True)
 
         self.show()
 
@@ -148,24 +193,24 @@ class MainWindow(QWidget):
         else:
             genre = ""
 
-        if self.actorCheck.isTristate():
-            actor = self.actorText.text()
-        else:
-            actor = ""
+        actor = self.actorText.text()
+        year = self.yearText.text()
 
-        if self.yearCheck.isTristate():
-            year = self.yearText.text()
-        else:
-            year = ""
-
-        discover, add_ons = main.get_addons(genre, actor, year)
-        print(discover, add_ons)
-        movie = main.get_movie(discover, add_ons)
-        print(movie['title'],":",movie['overview'])
+        self.discover, self.add_ons = main.get_addons(genre, actor, year)
+        print(self.discover, self.add_ons)
+        movie = main.get_movie(self.discover, self.add_ons)
+        print(movie['title'], ":", movie['overview'])
         self.movie_ui(movie)
 
-    def on_click(self):
-        # main.main()
+    def get_a_movie(self):
+        movie = main.get_movie(self.discover, self.add_ons)
+        print(movie['title'], ":", movie['overview'])
+        self.movie_ui(movie)
+
+    def on_refusal(self):
+        self.get_a_movie()
+
+    def on_new_movie(self):
         self.main_ui()
 
 
@@ -173,7 +218,7 @@ def window():
     app = QApplication(sys.argv)
     win = MainWindow()
     win.show()
-    sys.exit(app.exec_())
+    sys.exit(app.quit())
 
 
 if __name__ == '__main__':
